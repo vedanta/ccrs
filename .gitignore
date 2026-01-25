@@ -136,3 +136,61 @@ cython_debug/
 .DS_Store
 Thumbs.db
 
+# CCRS-specific files
+*.log
+*.pid
+.*.pid
+worker.log*
+api.log*
+redis.log*
+ccrs.log*
+
+# Runtime and temporary files
+temp/
+tmp/
+logs/
+dumps/
+
+# Redis data files (if running locally)
+redis-data/
+dump.rdb
+*.rdb
+
+# Docker volumes and data
+docker-data/
+volumes/
+
+# Claude CLI cache (if any)
+.claude-cache/
+claude-cache/
+
+# Process and daemon files
+nohup.out
+*.out
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Local configuration overrides
+.env.local
+.env.override
+local_config.py
+local_config.yaml
+
+# Performance and profiling
+*.prof
+profile_*.txt
+
+# Test artifacts
+test_output/
+test_logs/
+coverage_html/
+
+# Development debug files
+debug_*.py
+debug_*.log
+debug_*.txt
+test_*.py.tmp
+
