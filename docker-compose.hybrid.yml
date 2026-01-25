@@ -1,0 +1,37 @@
+# CCRS-2 Hybrid Deployment
+# API + Redis in containers, Worker runs on host with Claude access
+
+services:
+  # Redis - Job Queue (Container)
+  redis:
+    image: redis:7-alpine
+    container_name: ccrs2-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # CCRS-2 API Server (Container)
+  api:
+    build: .
+    container_name: ccrs2-api
+    ports:
+      - "8001:8000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python app.py
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  # Worker runs on HOST (not containerized)
+  # Use: python worker.py
+  # Environment: REDIS_HOST=localhost REDIS_PORT=6380
+
+volumes:
+  redis_data:

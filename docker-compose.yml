@@ -1,0 +1,44 @@
+services:
+  # Redis - Job Queue
+  redis:
+    image: redis:7-alpine
+    container_name: ccrs2-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # CCRS-2 API Server
+  api:
+    build: .
+    container_name: ccrs2-api
+    ports:
+      - "8001:8000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python app.py
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  # CCRS-2 Worker
+  worker:
+    build: .
+    container_name: ccrs2-worker
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: python worker.py
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  redis_data:
