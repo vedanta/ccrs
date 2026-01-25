@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create a non-root user
-RUN useradd -m ccrs2 && chown -R ccrs2:ccrs2 /app
-USER ccrs2
+RUN useradd -m ccrs && chown -R ccrs:ccrs /app
+USER ccrs
 
 # Expose port
 EXPOSE 8000

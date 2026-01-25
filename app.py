@@ -1,5 +1,5 @@
 """
-CCRS-2 - Simple & Effective Claude Code Routing Service
+CCRS - Simple & Effective Claude Code Routing Service
 Single FastAPI file for lean implementation
 """
 import json
@@ -15,9 +15,9 @@ from models import JobRequest, JobResponse, JobStatus, HealthResponse
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="CCRS-2",
+    title="CCRS",
     description="Lean Claude Code Routing Service",
-    version="2.0.0"
+    version="3.0.0"
 )
 
 # Add CORS middleware
@@ -53,7 +53,7 @@ def validate_tenant(tenant_id: str) -> bool:
 
 def generate_job_id() -> str:
     """Generate unique job ID"""
-    return f"ccrs2-{uuid.uuid4().hex[:8]}"
+    return f"ccrs-{uuid.uuid4().hex[:8]}"
 
 def get_current_time() -> str:
     """Get current time as ISO string"""
@@ -103,7 +103,7 @@ async def execute_job(request: JobRequest):
         redis_client.setex(f"job:{job_id}", 3600, json.dumps(job_data))
 
         # Add to job queue
-        redis_client.lpush("ccrs2:job_queue", job_id)
+        redis_client.lpush("ccrs:job_queue", job_id)
 
         print(f"📋 Job {job_id} queued for {request.tenant_id}: {request.operation}")
 
@@ -149,8 +149,8 @@ async def get_job_status(job_id: str):
 async def root():
     """Root endpoint"""
     return {
-        "service": "CCRS-2",
-        "version": "2.0.0",
+        "service": "CCRS",
+        "version": "3.0.0",
         "description": "Lean Claude Code Routing Service",
         "endpoints": {
             "health": "/health",

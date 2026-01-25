@@ -1,52 +1,18 @@
-# 📖 CCRS-2 User Guide
+# 📖 CCRS User Guide
 
 **Simple, effective Claude Code routing service - Get started in minutes!**
 
-## 🎯 What is CCRS-2?
+## 🎯 What is CCRS?
 
-CCRS-2 is a lightweight microservice that lets you interact with Claude through a simple REST API and professional CLI. It handles job queuing, processing, and result retrieval - perfect for automating Claude interactions or building applications.
+CCRS is a lightweight microservice that lets you interact with Claude through a simple REST API and professional CLI. It handles job queuing, processing, and result retrieval - perfect for automating Claude interactions or building applications.
 
 **Key Features:**
-- ✅ **Simple Architecture** - FastAPI + Redis + Worker
+- ✅ **Linux-Style Service Management** - Familiar `start`, `stop`, `restart` commands
+- ✅ **Hybrid Architecture** - Containers for infrastructure, host for Claude CLI access
 - ✅ **Professional CLI** - Easy-to-use command interface
-- ✅ **Multi-Tenant** - Support for different tenants/projects
-- ✅ **Docker Ready** - One-command deployment
-- ✅ **Job Queue** - Reliable background processing
-
----
-
-## 🎯 Claude Integration (Production Mode)
-
-**CCRS-2 supports two modes:**
-
-### 🧪 Mock Mode (Default)
-- Perfect for testing the architecture
-- Returns simulated Claude responses
-- No Claude CLI required
-- Ideal for development and CI/CD
-
-### 🚀 Production Mode (Real Claude)
-- Connects to actual Claude Code CLI
-- Returns real Claude responses
-- Requires Claude CLI installation
-- **Recommended setup: Hybrid deployment**
-
-**Quick Production Setup:**
-```bash
-# 1. Install Claude CLI (if not already installed)
-# Visit: https://claude.ai/claude-code
-
-# 2. Start hybrid services (API + Redis in containers)
-./ccrs2 up-hybrid
-
-# 3. Run worker on host (accesses Claude CLI directly)
-./ccrs2 worker-host
-
-# 4. Test real integration
-./ccrs2 chat "What is 2+2?" --wait
-```
-
-See **[DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** for detailed Claude integration instructions.
+- ✅ **Background Daemon Mode** - Production-ready worker with PID management
+- ✅ **Real Claude Integration** - Direct Claude Code CLI integration
+- ✅ **Multi-Tenant Support** - Support for different tenants/projects
 
 ---
 
@@ -54,123 +20,160 @@ See **[DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)** for detailed Claude integrati
 
 ### Prerequisites
 
-- **Docker & Docker Compose** (for easy setup)
-- **Python 3.11+** (for CLI usage)
-- **Git** (to clone the repository)
+- **Docker & Docker Compose** (for infrastructure)
+- **Python 3.11+** (for CLI and worker)
 - **Claude Code CLI** (for real Claude integration) - Install from [claude.ai/claude-code](https://claude.ai/claude-code)
 
-### 1. Get CCRS-2
+### 1. Get CCRS
 
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd ccrs2
+cd ccrs
 
 # Make CLI wrapper executable
-chmod +x ccrs2
+chmod +x ccrs
 ```
 
-### 2. Start CCRS-2 Services
+### 2. Start CCRS Services
 
 ```bash
-# Start all services with Docker Compose
-./ccrs2 up
+# Start infrastructure (API + Redis containers)
+./ccrs start
 
-# Or use docker-compose directly
-docker-compose up -d
+# Start worker daemon (Claude integration)
+./ccrs worker start --daemon
 ```
 
 **What this does:**
-- 🗄️ **Redis** - Job queue and storage (port 6380)
-- 🌐 **API Server** - REST API endpoints (port 8001)
-- ⚙️ **Worker** - Background job processor
+- 🗄️ **Redis Container** - Job queue and storage (port 6380)
+- 🌐 **API Container** - REST API endpoints (port 8001)
+- ⚙️ **Worker Process** - Background job processor (runs on host)
 
 ### 3. Verify Everything is Running
 
 ```bash
-# Check service status
-./ccrs2 ps
+# Check all services
+./ccrs status-all
 
-# Check CCRS-2 health
-./ccrs2 health
+# Check specific components
+./ccrs worker status
+./ccrs health
 ```
 
 **Expected Output:**
 ```
-🏥 Checking CCRS-2 health...
-
-📊 Service Status:
-  Status: healthy
-  Version: 2.0.0
-  Timestamp: 2026-01-25T14:00:00Z
-✅ CCRS-2 is healthy and ready!
+🔍 CCRS Service Status
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Containers: Running
+✅ Claude CLI: /Users/username/.local/bin/claude
+✅ Worker Process: Running (PID: 12345)
+✅ Redis Connection: OK (port 6380)
+✅ API: Healthy
 ```
 
 ### 4. Your First Chat
 
 ```bash
 # Send a message to Claude
-./ccrs2 chat "Hello Claude! How are you today?" --wait
+./ccrs chat "Hello Claude! How are you today?" --wait
 ```
 
 **Expected Output:**
 ```
 💬 Sending message to Claude...
-📋 Job submitted: ccrs2-abc12345
+📋 Job submitted: ccrs-abc12345
 ⏳ Waiting for response...
 
 ✅ Response from Claude:
-Mock Claude response to: Hello Claude! How are you today?
+Hello! I'm doing well, thank you for asking. I'm here and ready to help you with any questions or tasks you might have. How can I assist you today?
 ```
 
-🎉 **Congratulations! CCRS-2 is working!**
+🎉 **Congratulations! CCRS is working with real Claude integration!**
 
 ---
 
 ## 📋 Complete CLI Reference
 
-### Basic Commands
+### Service Management (Linux-Style)
+
+#### Infrastructure Control
+```bash
+# Start all CCRS services (hybrid mode)
+./ccrs start
+
+# Stop all services (containers + worker)
+./ccrs stop
+
+# Restart everything
+./ccrs restart
+
+# Check all service status
+./ccrs status-all
+```
+
+#### Worker Management
+```bash
+# Start worker (foreground - for development)
+./ccrs worker start
+
+# Start worker (background daemon - for production)
+./ccrs worker start --daemon
+./ccrs worker start -d
+
+# Stop worker daemon
+./ccrs worker stop
+
+# Restart worker
+./ccrs worker restart
+
+# Check worker status
+./ccrs worker status
+```
+
+### Claude Integration
 
 #### Chat with Claude
 ```bash
 # Send a chat message and wait for response
-./ccrs2 chat "Explain Python asyncio" --wait
+./ccrs chat "Explain Python asyncio" --wait
 
-# Send a message without waiting
-./ccrs2 chat "Analyze this code structure"
+# Send a message without waiting (async)
+./ccrs chat "Analyze this code structure"
 
 # Use shortcuts
-./ccrs2 c "Quick chat message" --wait
+./ccrs c "Quick chat message" --wait
 ```
 
 #### Execute Claude Commands
 ```bash
 # Execute a Claude command
-./ccrs2 command "/help" --wait
+./ccrs command "/help" --wait
 
-# Use shortcut
-./ccrs2 cmd "/analyze file.py" --wait
+# Direct Claude command (e.g., "/status", "/analyze")
+./ccrs cmd "/analyze file.py" --wait
 ```
 
-#### Check Job Status
+#### Job Management
 ```bash
 # Check specific job status
-./ccrs2 status ccrs2-abc12345
+./ccrs status ccrs-abc12345
 
 # Use shortcut
-./ccrs2 s ccrs2-abc12345
+./ccrs s ccrs-abc12345
 ```
 
 #### Health & System Info
 ```bash
-# Check CCRS-2 health
-./ccrs2 health
+# Check CCRS health
+./ccrs health
+./ccrs h                  # Shortcut
 
 # Show version
-./ccrs2 version
+./ccrs version
 
-# Show help
-./ccrs2 --help
+# Show comprehensive help
+./ccrs --help
 ```
 
 ### Advanced Options
@@ -178,16 +181,16 @@ Mock Claude response to: Hello Claude! How are you today?
 #### Multi-Tenant Usage
 ```bash
 # Specify different tenant
-./ccrs2 chat "Hello" --tenant production --wait
-./ccrs2 chat "Hello" --tenant testing --wait
+./ccrs chat "Hello" --tenant production --wait
+./ccrs chat "Hello" --tenant testing --wait
 
-# Default tenants: demo, test, example
+# Default tenants: demo, test, production
 ```
 
 #### Custom Timeouts
 ```bash
 # Set custom timeout (in seconds)
-./ccrs2 chat "Complex analysis task" --timeout 600 --wait
+./ccrs chat "Complex analysis task" --timeout 600 --wait
 
 # Default timeout is 300 seconds (5 minutes)
 ```
@@ -195,113 +198,105 @@ Mock Claude response to: Hello Claude! How are you today?
 #### Environment Variables
 ```bash
 # Override default API URL
-export CCRS2_URL="http://custom-server:8001"
+export CCRS_URL="http://custom-server:8001"
 
 # Override default tenant
-export CCRS2_TENANT="production"
+export CCRS_TENANT="production"
 
 # Then use normally
-./ccrs2 chat "Hello" --wait
+./ccrs chat "Hello" --wait
 ```
 
 ---
 
-## 🐳 Docker Management
+## 🏗️ Production Deployment
 
-### Service Control
+### Production Setup
+
 ```bash
-# Start services
-./ccrs2 up
+# 1. Start infrastructure
+./ccrs start
 
-# Stop services
-./ccrs2 down
+# 2. Start worker daemon (background)
+./ccrs worker start --daemon
 
-# Restart services
-./ccrs2 down && ./ccrs2 up
+# 3. Verify everything is running
+./ccrs status-all
+
+# 4. Test integration
+./ccrs chat "Production test" --wait
 ```
 
-### Monitoring
+### Daily Operations
+
+#### Health Monitoring
 ```bash
-# Check service status
-./ccrs2 ps
+# Full system status
+./ccrs status-all
 
-# View logs (all services)
-./ccrs2 logs
+# Worker-specific status
+./ccrs worker status
 
-# View logs for specific service
-docker-compose logs -f api
-docker-compose logs -f worker
-docker-compose logs -f redis
+# API health check
+./ccrs health
+
+# Container status
+./ccrs ps
 ```
 
-### Troubleshooting
+#### Log Monitoring
 ```bash
-# Quick status check
-./ccrs2 check
+# View all container logs
+./ccrs logs
 
-# Restart a specific service
-docker-compose restart api
-docker-compose restart worker
+# View worker logs (daemon mode)
+./ccrs logs worker
 
-# Rebuild and restart
-docker-compose down
-docker-compose up --build -d
+# Live worker logs
+tail -f worker.log
+
+# API logs specifically
+docker logs ccrs-api
 ```
 
----
-
-## ⚙️ Manual Setup (Without Docker)
-
-### Prerequisites
+#### Service Management
 ```bash
-# Install Python dependencies
-pip install -r requirements.txt
+# Restart just the worker
+./ccrs worker restart
 
-# Install and start Redis
-# On macOS with Homebrew:
-brew install redis
-brew services start redis
+# Restart everything
+./ccrs restart
 
-# On Ubuntu:
-sudo apt install redis-server
-sudo systemctl start redis-server
+# Stop everything cleanly
+./ccrs stop
 ```
 
-### Start Services Manually
+### Environment Configuration
 
-#### Terminal 1: API Server
 ```bash
-python app.py
-```
+# Production environment setup
+export CCRS_URL="http://prod-ccrs:8001"
+export CCRS_TENANT="production"
+export REDIS_HOST="prod-redis"
+export REDIS_PORT="6380"
 
-#### Terminal 2: Worker
-```bash
-python worker.py
-```
-
-#### Terminal 3: Use CLI
-```bash
-# Direct Python CLI
-python cli.py health
-python cli.py chat "Hello Claude!" --wait
-
-# Or use the wrapper
-./ccrs2 health
-./ccrs2 chat "Hello Claude!" --wait
+# Development environment
+export CCRS_URL="http://localhost:8001"
+export CCRS_TENANT="dev"
 ```
 
 ---
 
-## 🔧 Configuration
+## 🛠️ Configuration
 
 ### Port Configuration
 
 **Default Ports:**
-- **API:** 8001 (mapped from internal 8000)
-- **Redis:** 6380 (mapped from internal 6379)
+- **API:** http://localhost:8001
+- **Redis:** localhost:6380 (mapped from container)
 
 **Custom Ports:**
-Edit `docker-compose.yml`:
+Edit `docker-compose.hybrid.yml`:
 ```yaml
 api:
   ports:
@@ -309,116 +304,43 @@ api:
 
 redis:
   ports:
-    - "7000:6379"  # Use port 7000 instead
+    - "7000:6379"  # Use port 7000 instead (container internal port stays 6379)
 ```
 
 Then update your environment:
 ```bash
-export CCRS2_URL="http://localhost:9000"
+export CCRS_URL="http://localhost:9000"
+export REDIS_PORT=7000
 ```
 
-### Environment Variables
+### Worker Configuration
 
-Create `.env` file in CCRS-2 directory:
+The worker automatically detects Claude CLI and connects to Redis:
+
 ```bash
-# API Configuration
-CCRS2_URL=http://localhost:8001
+# Worker environment variables (auto-configured)
+REDIS_HOST=localhost      # Connects to container Redis
+REDIS_PORT=6380          # Container Redis port
+```
 
-# Redis Configuration
+### Multi-Environment Setup
+
+#### Development
+```bash
+# .env.development
+CCRS_URL=http://localhost:8001
+CCRS_TENANT=dev
 REDIS_HOST=localhost
 REDIS_PORT=6380
-
-# Default Tenant
-CCRS2_TENANT=demo
 ```
 
----
-
-## 🛠️ Installation Options
-
-### Option 1: Local Installation
+#### Production
 ```bash
-# Install for current user only
-./install.sh --local
-
-# Then use globally
-ccrs2 chat "Now available everywhere!" --wait
-```
-
-### Option 2: System-Wide Installation
-```bash
-# Install for all users (requires sudo)
-./install.sh --global
-
-# Then any user can run
-ccrs2 chat "Available system-wide!" --wait
-```
-
-### Option 3: Windows Installation
-```cmd
-# Use the Windows batch file
-ccrs2.bat chat "Hello from Windows!" --wait
-
-# Copy to a directory in your PATH for global access
-```
-
----
-
-## 📊 Usage Examples
-
-### Basic Workflow
-```bash
-# 1. Start services
-./ccrs2 up
-
-# 2. Check health
-./ccrs2 health
-
-# 3. Chat with Claude
-./ccrs2 chat "Explain the difference between async and sync programming" --wait
-
-# 4. Execute a command
-./ccrs2 command "/help" --wait
-
-# 5. Check job status (if not using --wait)
-./ccrs2 status ccrs2-abc12345
-
-# 6. Stop services when done
-./ccrs2 down
-```
-
-### Development Workflow
-```bash
-# Start services
-./ccrs2 up
-
-# Run multiple jobs
-./ccrs2 chat "First question" --tenant dev
-./ccrs2 chat "Second question" --tenant dev
-./ccrs2 chat "Third question" --tenant dev
-
-# Check all job statuses
-./ccrs2 status ccrs2-job1
-./ccrs2 status ccrs2-job2
-./ccrs2 status ccrs2-job3
-
-# Monitor logs
-./ccrs2 logs
-```
-
-### Production-Like Usage
-```bash
-# Use production tenant with longer timeout
-./ccrs2 chat "Complex analysis task" \
-  --tenant production \
-  --timeout 900 \
-  --wait
-
-# Check system health regularly
-./ccrs2 health
-
-# Monitor service status
-./ccrs2 ps
+# .env.production
+CCRS_URL=http://prod-api:8001
+CCRS_TENANT=production
+REDIS_HOST=prod-redis
+REDIS_PORT=6380
 ```
 
 ---
@@ -430,115 +352,128 @@ ccrs2.bat chat "Hello from Windows!" --wait
 #### 1. Services Won't Start
 ```bash
 # Check if ports are in use
-./ccrs2 ps
+./ccrs ps
 lsof -i :8001  # Check API port
 lsof -i :6380  # Check Redis port
 
 # Solution: Stop conflicting services or change ports
 ```
 
-#### 2. Health Check Fails
+#### 2. Worker Issues
+```bash
+# Check worker status
+./ccrs worker status
+
+# Common problems:
+# ❌ Containers not running → ./ccrs start
+# ❌ Claude CLI not found → Install from claude.ai/claude-code
+# ❌ Redis not accessible → Check container logs
+```
+
+#### 3. Claude CLI Not Found
+```bash
+# Verify Claude CLI installation
+which claude
+claude --version
+
+# Install if missing
+# Visit: https://claude.ai/claude-code
+
+# Add to PATH if needed
+export PATH=$PATH:/path/to/claude
+```
+
+#### 4. API Health Fails
 ```bash
 # Check service logs
-./ccrs2 logs
+./ccrs logs
 
 # Restart services
-./ccrs2 down
-./ccrs2 up
+./ccrs restart
 
-# Check individual service status
-docker-compose ps
+# Test API manually
+curl http://localhost:8001/health
 ```
 
-#### 3. Jobs Get Stuck
+#### 5. Worker Won't Start
 ```bash
-# Check worker logs
-docker-compose logs worker
+# Check dependencies
+./ccrs worker status
 
-# Restart worker
-docker-compose restart worker
+# Check container prerequisite
+./ccrs ps
 
-# Clear Redis queue (if needed)
-docker-compose exec redis redis-cli FLUSHALL
-```
-
-#### 4. CLI Command Not Found
-```bash
-# Make sure wrapper is executable
-chmod +x ccrs2
-
-# Use full path
-./ccrs2 health
-
-# Or install globally
-./install.sh --local
+# Check logs
+./ccrs logs worker
+tail -f worker.log
 ```
 
 ### Debug Mode
 
-#### Enable Verbose Logging
-Add to `docker-compose.yml`:
-```yaml
-api:
-  environment:
-    - LOG_LEVEL=DEBUG
+#### View Detailed Logs
+```bash
+# All container logs
+./ccrs logs
 
-worker:
-  environment:
-    - LOG_LEVEL=DEBUG
+# Worker logs (if in daemon mode)
+tail -f worker.log
+
+# Real-time API logs
+docker logs -f ccrs-api
+
+# Real-time Redis logs
+docker logs -f ccrs-redis
 ```
 
 #### Manual Testing
 ```bash
-# Test API directly
+# Test API endpoints directly
 curl http://localhost:8001/health
 
-# Test job submission
+# Submit test job
 curl -X POST http://localhost:8001/execute \
   -H "Content-Type: application/json" \
   -d '{"tenant_id": "demo", "operation": "chat", "message": "test"}'
+
+# Check Redis directly
+redis-cli -p 6380 ping
+redis-cli -p 6380 keys "ccrs*"
+```
+
+#### Force Clean Restart
+```bash
+# Nuclear option - clean everything
+./ccrs stop
+docker system prune -f
+./ccrs start
+./ccrs worker start --daemon
 ```
 
 ---
 
-## 🔒 Security Notes
+## 🔧 Advanced Usage
 
-### Default Configuration
-- **Demo Mode:** Uses mock Claude responses for testing
-- **No Authentication:** Default setup has no auth (add for production)
-- **Local Access:** Services bound to localhost by default
+### Multiple Workers
+```bash
+# Run multiple workers for high throughput
+./ccrs worker start --daemon   # Worker 1
+python -u worker.py &            # Worker 2
+python -u worker.py &            # Worker 3
 
-### Production Considerations
-- Add API authentication/authorization
-- Use proper secrets management
-- Configure SSL/TLS
-- Set up monitoring and alerting
-- Use production Redis with persistence
-
----
-
-## 📚 Next Steps
-
-### Integration with Real Claude
-Replace mock responses in `worker.py`:
-```python
-# Replace this mock execution
-cmd = ["echo", f"Mock Claude response to: {message}"]
-
-# With real Claude CLI
-cmd = ["claude", "--print", "--output-format", "text", message]
+# Check all worker processes
+ps aux | grep worker.py
 ```
 
-### Build Applications
-Use CCRS-2 as a backend service:
+### Custom API Integration
 ```python
 import requests
 
-# Submit job
+# Submit job programmatically
 response = requests.post("http://localhost:8001/execute", json={
     "tenant_id": "myapp",
     "operation": "chat",
-    "message": "Hello Claude!"
+    "message": "Hello Claude!",
+    "timeout_seconds": 300
 })
 
 job_id = response.json()["job_id"]
@@ -548,11 +483,38 @@ status = requests.get(f"http://localhost:8001/jobs/{job_id}")
 result = status.json()
 ```
 
-### Scale Up
-- Add multiple worker instances
-- Use Redis cluster for high availability
-- Add load balancing
-- Implement monitoring and metrics
+### Integration with CI/CD
+```yaml
+# GitHub Actions example
+- name: Start CCRS
+  run: |
+    cd ccrs
+    ./ccrs start
+    ./ccrs worker start --daemon
+
+- name: Test Claude Integration
+  run: |
+    cd ccrs
+    ./ccrs health
+    ./ccrs chat "Run tests for this project" --wait
+
+- name: Cleanup
+  run: |
+    cd ccrs
+    ./ccrs stop
+```
+
+### Monitoring Setup
+```bash
+# Health check endpoint for monitoring
+curl http://localhost:8001/health
+
+# Prometheus metrics (if implemented)
+curl http://localhost:8001/metrics
+
+# Log aggregation
+./ccrs logs | tee /var/log/ccrs/ccrs.log
+```
 
 ---
 
@@ -560,18 +522,31 @@ result = status.json()
 
 ### Quick Commands
 ```bash
-./ccrs2 --help          # Comprehensive help
-./ccrs2 health           # Check if running
-./ccrs2 ps               # Service status
-./ccrs2 logs             # View logs
-./ccrs2 check            # Quick status check
+./ccrs --help              # Comprehensive help
+./ccrs worker status        # Check worker + Claude CLI
+./ccrs status-all           # Check everything
+./ccrs logs                 # View logs
 ```
 
 ### Resources
-- **README.md** - Technical documentation
+- **README.md** - Technical overview and architecture
+- **ARCHITECTURE.md** - Detailed system design
+- **DEVELOPER.md** - Development and customization guide
 - **API Documentation** - http://localhost:8001/docs (when running)
-- **Docker Logs** - `./ccrs2 logs` for detailed service logs
+
+### Support Workflow
+1. **Check status**: `./ccrs status-all`
+2. **Check logs**: `./ccrs logs` and `./ccrs logs worker`
+3. **Restart services**: `./ccrs restart`
+4. **Test basic functionality**: `./ccrs health`
+5. **Test Claude integration**: `./ccrs chat "test" --wait`
 
 ---
 
-**🎉 You're now ready to use CCRS-2! Enjoy your simple, effective Claude Code routing service!**
+**🎉 You're now ready to use CCRS! Enjoy your simple, effective Claude Code routing service!**
+
+**Pro tip**: Bookmark the command shortcuts:
+- `./ccrs c "message"` - Quick chat
+- `./ccrs s <job-id>` - Check status
+- `./ccrs worker status` - Check worker health
+- `./ccrs status-all` - Check everything

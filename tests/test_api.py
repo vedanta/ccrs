@@ -1,5 +1,5 @@
 """
-Test CCRS-2 FastAPI Endpoints
+Test CCRS FastAPI Endpoints
 """
 import pytest
 import json
@@ -30,7 +30,7 @@ class TestRootEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert "service" in data
-        assert data["service"] == "CCRS-2"
+        assert data["service"] == "CCRS"
         assert data["version"] == "2.0.0"
 
 class TestExecuteEndpoint:
@@ -51,7 +51,7 @@ class TestExecuteEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "accepted"
-        assert data["job_id"].startswith("ccrs2-")
+        assert data["job_id"].startswith("ccrs-")
         assert "Job submitted successfully" in data["message"]
 
         # Verify Redis calls
@@ -130,7 +130,7 @@ class TestJobStatusEndpoint:
     @pytest.mark.api
     def test_get_job_status_not_found(self, api_client):
         """Test GET /jobs/{job_id} when job doesn't exist."""
-        job_id = "ccrs2-nonexistent"
+        job_id = "ccrs-nonexistent"
 
         # Mock Redis to return no job
         api_client.mock_redis.exists.return_value = 0
@@ -144,7 +144,7 @@ class TestJobStatusEndpoint:
     @pytest.mark.api
     def test_get_job_status_redis_error(self, api_client):
         """Test GET /jobs/{job_id} when Redis fails."""
-        job_id = "ccrs2-test123"
+        job_id = "ccrs-test123"
 
         # Mock Redis error
         api_client.mock_redis.exists.side_effect = Exception("Redis connection failed")

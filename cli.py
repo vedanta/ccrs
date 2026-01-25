@@ -1,5 +1,5 @@
 """
-CCRS-2 Simple CLI
+CCRS Simple CLI
 Essential commands for Claude Code routing
 """
 import click
@@ -10,12 +10,12 @@ import os
 from typing import Optional
 
 
-class CCRS2Client:
+class CCRSClient:
     def __init__(self, base_url: str = None):
-        self.base_url = base_url or os.getenv('CCRS2_URL', 'http://localhost:8001')
+        self.base_url = base_url or os.getenv('CCRS_URL', 'http://localhost:8001')
 
     def submit_job(self, tenant_id: str, operation: str, message: str, timeout_seconds: int = 300) -> Optional[dict]:
-        """Submit a job to CCRS-2"""
+        """Submit a job to CCRS"""
         try:
             response = requests.post(
                 f"{self.base_url}/execute",
@@ -57,7 +57,7 @@ class CCRS2Client:
             return None
 
     def health_check(self) -> Optional[dict]:
-        """Check CCRS-2 health"""
+        """Check CCRS health"""
         try:
             response = requests.get(f"{self.base_url}/health", timeout=10)
 
@@ -73,19 +73,19 @@ class CCRS2Client:
 
 
 # Initialize client
-client = CCRS2Client()
+client = CCRSClient()
 
 
 @click.group()
 def cli():
     """
-    CCRS-2 CLI - Simple Claude Code Routing Service
+    CCRS CLI - Simple Claude Code Routing Service
 
     Examples:
-      ccrs2 chat "Hello Claude!"
-      ccrs2 chat "Explain Python async" --wait
-      ccrs2 status ccrs2-abc12345
-      ccrs2 health
+      ccrs chat "Hello Claude!"
+      ccrs chat "Explain Python async" --wait
+      ccrs status ccrs-abc12345
+      ccrs health
     """
     pass
 
@@ -142,7 +142,7 @@ def chat(message, tenant, wait, timeout):
             time.sleep(2)
             polls += 1
 
-        click.echo(f"⏰ Timeout after {timeout} seconds. Check status with: ccrs2 status {job['job_id']}")
+        click.echo(f"⏰ Timeout after {timeout} seconds. Check status with: ccrs status {job['job_id']}")
 
 
 @cli.command()
@@ -194,7 +194,7 @@ def command(message, tenant, wait, timeout):
             time.sleep(2)
             polls += 1
 
-        click.echo(f"⏰ Timeout after {timeout} seconds. Check status with: ccrs2 status {job['job_id']}")
+        click.echo(f"⏰ Timeout after {timeout} seconds. Check status with: ccrs status {job['job_id']}")
 
 
 @cli.command()
@@ -234,9 +234,9 @@ def status(job_id):
 
 @cli.command()
 def health():
-    """Check CCRS-2 service health"""
+    """Check CCRS service health"""
 
-    click.echo("🏥 Checking CCRS-2 health...")
+    click.echo("🏥 Checking CCRS health...")
 
     health = client.health_check()
 
@@ -249,15 +249,15 @@ def health():
     click.echo(f"  Timestamp: {health['timestamp']}")
 
     if health['status'] == 'healthy':
-        click.echo("✅ CCRS-2 is healthy and ready!")
+        click.echo("✅ CCRS is healthy and ready!")
     else:
-        click.echo("⚠️  CCRS-2 may have issues")
+        click.echo("⚠️  CCRS may have issues")
 
 
 @cli.command()
 def version():
     """Show CLI version"""
-    click.echo("CCRS-2 CLI v2.0.0")
+    click.echo("CCRS CLI v3.0.0")
 
 
 if __name__ == '__main__':

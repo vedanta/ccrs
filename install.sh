@@ -1,6 +1,6 @@
 #!/bin/bash
-# CCRS-2 Installation Script
-# Install the CCRS-2 CLI wrapper system-wide
+# CCRS Installation Script
+# Install the CCRS CLI wrapper system-wide
 
 set -e
 
@@ -13,12 +13,12 @@ NC='\033[0m' # No Color
 
 # Installation locations
 INSTALL_DIR="/usr/local/bin"
-CCRS2_HOME="$HOME/.ccrs2"
+CCRS_HOME="$HOME/.ccrs"
 
 show_logo() {
     echo -e "${BLUE}"
     echo "  ╔═══════════════════════════════════════╗"
-    echo "  ║         CCRS-2 INSTALLER              ║"
+    echo "  ║         CCRS INSTALLER              ║"
     echo "  ║    Claude Code Routing Service        ║"
     echo -e "  ║           ${GREEN}Simple & Effective${BLUE}           ║"
     echo "  ╚═══════════════════════════════════════╝"
@@ -27,7 +27,7 @@ show_logo() {
 
 show_help() {
     show_logo
-    echo "Install CCRS-2 CLI wrapper system-wide"
+    echo "Install CCRS CLI wrapper system-wide"
     echo
     echo -e "${GREEN}USAGE:${NC}"
     echo "  ./install.sh [OPTIONS]"
@@ -35,7 +35,7 @@ show_help() {
     echo -e "${GREEN}OPTIONS:${NC}"
     echo "  --global         Install system-wide (requires sudo)"
     echo "  --local          Install to user's local bin"
-    echo "  --uninstall      Remove installed CCRS-2"
+    echo "  --uninstall      Remove installed CCRS"
     echo "  --help           Show this help"
     echo
     echo -e "${GREEN}EXAMPLES:${NC}"
@@ -44,18 +44,18 @@ show_help() {
     echo "  ./install.sh --uninstall  # Remove installation"
 }
 
-# Check if running from CCRS-2 directory
+# Check if running from CCRS directory
 check_location() {
-    if [[ ! -f "./ccrs2" ]] || [[ ! -f "./cli.py" ]]; then
-        echo -e "${RED}❌ Error: Must run from CCRS-2 directory${NC}" >&2
-        echo -e "   Make sure you have ccrs2 and cli.py files" >&2
+    if [[ ! -f "./ccrs" ]] || [[ ! -f "./cli.py" ]]; then
+        echo -e "${RED}❌ Error: Must run from CCRS directory${NC}" >&2
+        echo -e "   Make sure you have ccrs and cli.py files" >&2
         exit 1
     fi
 }
 
 # Install globally (requires sudo)
 install_global() {
-    echo -e "${BLUE}🚀 Installing CCRS-2 globally...${NC}"
+    echo -e "${BLUE}🚀 Installing CCRS globally...${NC}"
 
     # Check sudo permissions
     if [[ $EUID -ne 0 ]]; then
@@ -66,56 +66,56 @@ install_global() {
         }
     fi
 
-    # Create CCRS2_HOME directory
-    mkdir -p "$CCRS2_HOME"
+    # Create CCRS_HOME directory
+    mkdir -p "$CCRS_HOME"
 
-    # Copy files to CCRS2_HOME
-    echo -e "${GREEN}📁 Copying files to $CCRS2_HOME${NC}"
-    cp -r ./* "$CCRS2_HOME/"
-    chmod +x "$CCRS2_HOME/ccrs2"
+    # Copy files to CCRS_HOME
+    echo -e "${GREEN}📁 Copying files to $CCRS_HOME${NC}"
+    cp -r ./* "$CCRS_HOME/"
+    chmod +x "$CCRS_HOME/ccrs"
 
     # Create wrapper script in /usr/local/bin
     echo -e "${GREEN}🔗 Creating global wrapper${NC}"
-    sudo tee "$INSTALL_DIR/ccrs2" > /dev/null << EOF
+    sudo tee "$INSTALL_DIR/ccrs" > /dev/null << EOF
 #!/bin/bash
-# CCRS-2 Global Wrapper
-export CCRS2_INSTALLED_DIR="$CCRS2_HOME"
-cd "$CCRS2_HOME"
-exec "./ccrs2" "\$@"
+# CCRS Global Wrapper
+export CCRS_INSTALLED_DIR="$CCRS_HOME"
+cd "$CCRS_HOME"
+exec "./ccrs" "\$@"
 EOF
 
-    sudo chmod +x "$INSTALL_DIR/ccrs2"
+    sudo chmod +x "$INSTALL_DIR/ccrs"
 
-    echo -e "${GREEN}✅ CCRS-2 installed globally!${NC}"
-    echo -e "   Command available: ${YELLOW}ccrs2${NC}"
-    echo -e "   Installation directory: ${BLUE}$CCRS2_HOME${NC}"
+    echo -e "${GREEN}✅ CCRS installed globally!${NC}"
+    echo -e "   Command available: ${YELLOW}ccrs${NC}"
+    echo -e "   Installation directory: ${BLUE}$CCRS_HOME${NC}"
 }
 
 # Install locally to user bin
 install_local() {
-    echo -e "${BLUE}🚀 Installing CCRS-2 locally...${NC}"
+    echo -e "${BLUE}🚀 Installing CCRS locally...${NC}"
 
     # Local bin directory
     LOCAL_BIN="$HOME/.local/bin"
     mkdir -p "$LOCAL_BIN"
-    mkdir -p "$CCRS2_HOME"
+    mkdir -p "$CCRS_HOME"
 
-    # Copy files to CCRS2_HOME
-    echo -e "${GREEN}📁 Copying files to $CCRS2_HOME${NC}"
-    cp -r ./* "$CCRS2_HOME/"
-    chmod +x "$CCRS2_HOME/ccrs2"
+    # Copy files to CCRS_HOME
+    echo -e "${GREEN}📁 Copying files to $CCRS_HOME${NC}"
+    cp -r ./* "$CCRS_HOME/"
+    chmod +x "$CCRS_HOME/ccrs"
 
     # Create wrapper script in local bin
     echo -e "${GREEN}🔗 Creating local wrapper${NC}"
-    cat > "$LOCAL_BIN/ccrs2" << EOF
+    cat > "$LOCAL_BIN/ccrs" << EOF
 #!/bin/bash
-# CCRS-2 Local Wrapper
-export CCRS2_INSTALLED_DIR="$CCRS2_HOME"
-cd "$CCRS2_HOME"
-exec "./ccrs2" "\$@"
+# CCRS Local Wrapper
+export CCRS_INSTALLED_DIR="$CCRS_HOME"
+cd "$CCRS_HOME"
+exec "./ccrs" "\$@"
 EOF
 
-    chmod +x "$LOCAL_BIN/ccrs2"
+    chmod +x "$LOCAL_BIN/ccrs"
 
     # Check if local bin is in PATH
     if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
@@ -125,50 +125,50 @@ EOF
         echo
     fi
 
-    echo -e "${GREEN}✅ CCRS-2 installed locally!${NC}"
-    echo -e "   Command available: ${YELLOW}ccrs2${NC}"
-    echo -e "   Installation directory: ${BLUE}$CCRS2_HOME${NC}"
+    echo -e "${GREEN}✅ CCRS installed locally!${NC}"
+    echo -e "   Command available: ${YELLOW}ccrs${NC}"
+    echo -e "   Installation directory: ${BLUE}$CCRS_HOME${NC}"
 }
 
-# Uninstall CCRS-2
+# Uninstall CCRS
 uninstall() {
-    echo -e "${YELLOW}🗑️  Uninstalling CCRS-2...${NC}"
+    echo -e "${YELLOW}🗑️  Uninstalling CCRS...${NC}"
 
     # Remove global installation
-    if [[ -f "$INSTALL_DIR/ccrs2" ]]; then
+    if [[ -f "$INSTALL_DIR/ccrs" ]]; then
         echo -e "${BLUE}Removing global installation${NC}"
-        sudo rm -f "$INSTALL_DIR/ccrs2"
+        sudo rm -f "$INSTALL_DIR/ccrs"
     fi
 
     # Remove local installation
-    if [[ -f "$HOME/.local/bin/ccrs2" ]]; then
+    if [[ -f "$HOME/.local/bin/ccrs" ]]; then
         echo -e "${BLUE}Removing local installation${NC}"
-        rm -f "$HOME/.local/bin/ccrs2"
+        rm -f "$HOME/.local/bin/ccrs"
     fi
 
-    # Remove CCRS2_HOME (ask for confirmation)
-    if [[ -d "$CCRS2_HOME" ]]; then
-        echo -e "${YELLOW}Remove CCRS-2 files from $CCRS2_HOME? [y/N]${NC}"
+    # Remove CCRS_HOME (ask for confirmation)
+    if [[ -d "$CCRS_HOME" ]]; then
+        echo -e "${YELLOW}Remove CCRS files from $CCRS_HOME? [y/N]${NC}"
         read -r response
         if [[ "$response" =~ ^[Yy]$ ]]; then
-            rm -rf "$CCRS2_HOME"
-            echo -e "${GREEN}✅ CCRS-2 files removed${NC}"
+            rm -rf "$CCRS_HOME"
+            echo -e "${GREEN}✅ CCRS files removed${NC}"
         fi
     fi
 
-    echo -e "${GREEN}✅ CCRS-2 uninstalled!${NC}"
+    echo -e "${GREEN}✅ CCRS uninstalled!${NC}"
 }
 
 # Test installation
 test_installation() {
     echo -e "${BLUE}🧪 Testing installation...${NC}"
 
-    if command -v ccrs2 &> /dev/null; then
-        echo -e "${GREEN}✅ ccrs2 command found${NC}"
-        ccrs2 --version
+    if command -v ccrs &> /dev/null; then
+        echo -e "${GREEN}✅ ccrs command found${NC}"
+        ccrs --version
         return 0
     else
-        echo -e "${RED}❌ ccrs2 command not found${NC}"
+        echo -e "${RED}❌ ccrs command not found${NC}"
         return 1
     fi
 }

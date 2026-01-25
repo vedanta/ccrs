@@ -1,4 +1,4 @@
-# CCRS-2 - Lean Dependencies
+# CCRS - Lean Dependencies
 # Core Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0

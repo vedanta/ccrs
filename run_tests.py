@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CCRS-2 Test Runner
+CCRS Test Runner
 Simplified test execution with different test levels
 """
 import sys
@@ -44,7 +44,7 @@ def run_tests(test_type="all", verbose=False):
     return result.returncode
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run CCRS-2 tests")
+    parser = argparse.ArgumentParser(description="Run CCRS tests")
     parser.add_argument(
         "type",
         nargs="?",
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(f"🧪 CCRS-2 Test Suite - Running {args.type} tests")
+    print(f"🧪 CCRS Test Suite - Running {args.type} tests")
     print("=" * 50)
 
     exit_code = run_tests(args.type, args.verbose)

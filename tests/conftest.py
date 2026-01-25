@@ -1,5 +1,5 @@
 """
-CCRS-2 Test Configuration
+CCRS Test Configuration
 Shared fixtures and test utilities
 """
 import pytest
@@ -49,7 +49,7 @@ def sample_job_request():
 def sample_job_data():
     """Sample job data for Redis storage."""
     return {
-        "job_id": "ccrs2-test123",
+        "job_id": "ccrs-test123",
         "tenant_id": "test",
         "operation": "chat",
         "message": "Test message",
@@ -66,7 +66,7 @@ def sample_job_data():
 def sample_completed_job():
     """Sample completed job data."""
     return {
-        "job_id": "ccrs2-test123",
+        "job_id": "ccrs-test123",
         "tenant_id": "test",
         "operation": "chat",
         "message": "Test message",
@@ -99,21 +99,21 @@ def worker_instance():
         mock_redis = Mock()
         mock_redis_module.Redis.return_value = mock_redis
 
-        from worker import CCRS2Worker
-        worker = CCRS2Worker()
+        from worker import CCRSWorker
+        worker = CCRSWorker()
         worker.redis_client = mock_redis
         yield worker, mock_redis
 
 @pytest.fixture
 def cli_client():
     """CLI client for testing."""
-    from cli import CCRS2Client
-    return CCRS2Client(base_url="http://test-server:8000")
+    from cli import CCRSClient
+    return CCRSClient(base_url="http://test-server:8000")
 
 # Test utilities
 def generate_test_job_id():
     """Generate a test job ID."""
-    return f"ccrs2-test{int(time.time())}"
+    return f"ccrs-test{int(time.time())}"
 
 def create_mock_response(status_code=200, json_data=None):
     """Create a mock HTTP response."""

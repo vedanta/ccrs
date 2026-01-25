@@ -1,5 +1,5 @@
 """
-Test CCRS-2 Worker Functionality
+Test CCRS Worker Functionality
 """
 import pytest
 import json
@@ -14,7 +14,7 @@ class TestWorkerInitialization:
         worker, mock_redis = worker_instance
 
         assert worker.redis_client == mock_redis
-        assert worker.queue_name == "ccrs2:jobs"
+        assert worker.queue_name == "ccrs:jobs"
         assert worker.polling_interval == 1
         assert worker.running is False
 
@@ -24,8 +24,8 @@ class TestWorkerInitialization:
         """Test worker initialization when Redis fails."""
         mock_redis_class.side_effect = Exception("Redis connection failed")
 
-        from worker import CCRS2Worker
-        worker = CCRS2Worker()
+        from worker import CCRSWorker
+        worker = CCRSWorker()
 
         assert worker.redis_client is None
 
@@ -60,7 +60,7 @@ class TestJobProcessing:
         worker, mock_redis = worker_instance
 
         job_data = {
-            "job_id": "ccrs2-test123",
+            "job_id": "ccrs-test123",
             "operation": "command",
             "message": "/help",
             "timeout_seconds": "300"
@@ -167,12 +167,12 @@ class TestJobQueueOperations:
         worker, mock_redis = worker_instance
 
         # Mock Redis returning a job
-        mock_redis.brpop.return_value = ("ccrs2:jobs", json.dumps(sample_job_data))
+        mock_redis.brpop.return_value = ("ccrs:jobs", json.dumps(sample_job_data))
 
         job = worker.get_next_job()
 
         assert job == sample_job_data
-        mock_redis.brpop.assert_called_once_with("ccrs2:jobs", timeout=1)
+        mock_redis.brpop.assert_called_once_with("ccrs:jobs", timeout=1)
 
     @pytest.mark.worker
     def test_get_next_job_none_available(self, worker_instance):
@@ -192,7 +192,7 @@ class TestJobQueueOperations:
         worker, mock_redis = worker_instance
 
         # Mock Redis returning invalid JSON
-        mock_redis.brpop.return_value = ("ccrs2:jobs", "invalid json")
+        mock_redis.brpop.return_value = ("ccrs:jobs", "invalid json")
 
         job = worker.get_next_job()
 
@@ -203,10 +203,10 @@ class TestJobQueueOperations:
         """Test updating job status in Redis."""
         worker, mock_redis = worker_instance
 
-        worker.update_job_status("ccrs2-test123", "running", started_at="2026-01-25T13:30:00Z")
+        worker.update_job_status("ccrs-test123", "running", started_at="2026-01-25T13:30:00Z")
 
         mock_redis.hset.assert_called_with(
-            "job:ccrs2-test123",
+            "job:ccrs-test123",
             "status", "running",
             "started_at", "2026-01-25T13:30:00Z"
         )
@@ -217,14 +217,14 @@ class TestJobQueueOperations:
         worker, mock_redis = worker_instance
 
         worker.update_job_status(
-            "ccrs2-test123",
+            "ccrs-test123",
             "completed",
             completed_at="2026-01-25T13:30:05Z",
             result="Test result"
         )
 
         mock_redis.hset.assert_called_with(
-            "job:ccrs2-test123",
+            "job:ccrs-test123",
             "status", "completed",
             "completed_at", "2026-01-25T13:30:05Z",
             "result", "Test result"
@@ -236,14 +236,14 @@ class TestJobQueueOperations:
         worker, mock_redis = worker_instance
 
         worker.update_job_status(
-            "ccrs2-test123",
+            "ccrs-test123",
             "failed",
             completed_at="2026-01-25T13:30:02Z",
             error="Test error"
         )
 
         mock_redis.hset.assert_called_with(
-            "job:ccrs2-test123",
+            "job:ccrs-test123",
             "status", "failed",
             "completed_at", "2026-01-25T13:30:02Z",
             "error", "Test error"

@@ -1,58 +1,91 @@
-# 📋 CCRS-2 Command Reference
+# 📋 CCRS Command Reference
 
-**Quick reference for all CCRS-2 commands**
+**Complete reference for all CCRS commands and options**
 
-## 🚀 Service Management
+## 🚀 Service Management (Linux-Style)
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `./ccrs2 up` | Start all services | `./ccrs2 up` |
-| `./ccrs2 down` | Stop all services | `./ccrs2 down` |
-| `./ccrs2 ps` | Show service status | `./ccrs2 ps` |
-| `./ccrs2 logs` | View all logs | `./ccrs2 logs` |
-| `./ccrs2 check` | Quick health check | `./ccrs2 check` |
+| `./ccrs start` | Start all CCRS services (hybrid mode) | `./ccrs start` |
+| `./ccrs stop` | Stop all CCRS services | `./ccrs stop` |
+| `./ccrs restart` | Restart all services | `./ccrs restart` |
+| `./ccrs status-all` | Show comprehensive service status | `./ccrs status-all` |
 
-## 💬 Core Commands
+## ⚙️ Worker Management
 
 | Command | Shortcut | Description | Example |
 |---------|----------|-------------|---------|
-| `chat` | `c` | Send chat message | `./ccrs2 c "Hello!" --wait` |
-| `command` | `cmd` | Execute Claude command | `./ccrs2 cmd "/help" --wait` |
-| `status` | `s` | Check job status | `./ccrs2 s ccrs2-abc123` |
-| `health` | `h` | Check service health | `./ccrs2 h` |
-| `version` |  | Show version | `./ccrs2 version` |
+| `worker start` | | Start worker (foreground) | `./ccrs worker start` |
+| `worker start --daemon` | `worker start -d` | Start worker (background) | `./ccrs worker start -d` |
+| `worker stop` | | Stop worker daemon | `./ccrs worker stop` |
+| `worker restart` | | Restart worker | `./ccrs worker restart` |
+| `worker status` | | Show worker status | `./ccrs worker status` |
+
+## 💬 Claude Integration
+
+| Command | Shortcut | Description | Example |
+|---------|----------|-------------|---------|
+| `chat` | `c` | Send chat message | `./ccrs c "Hello!" --wait` |
+| `command` | `cmd` | Execute Claude command | `./ccrs cmd "/help" --wait` |
+| `status` | `s` | Check job status | `./ccrs s ccrs-abc123` |
+| `health` | `h` | Check service health | `./ccrs h` |
+| `version` | | Show version | `./ccrs version` |
 
 ## 🔧 Options & Flags
 
 | Flag | Description | Example |
 |------|-------------|---------|
-| `--wait` | Wait for job completion | `./ccrs2 chat "msg" --wait` |
-| `--tenant <name>` | Set tenant | `./ccrs2 chat "msg" --tenant prod` |
-| `--timeout <sec>` | Set timeout | `./ccrs2 chat "msg" --timeout 600` |
-| `--help` | Show help | `./ccrs2 --help` |
-| `-v` | Show version | `./ccrs2 -v` |
+| `--wait` | Wait for job completion | `./ccrs chat "msg" --wait` |
+| `--tenant <name>` | Set tenant | `./ccrs chat "msg" --tenant prod` |
+| `--timeout <sec>` | Set timeout | `./ccrs chat "msg" --timeout 600` |
+| `--daemon` | Run worker in background | `./ccrs worker start --daemon` |
+| `--help` | Show help | `./ccrs --help` |
+| `-v` | Show version | `./ccrs -v` |
+| `-d` | Daemon mode shortcut | `./ccrs worker start -d` |
 
 ## 🌍 Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `CCRS2_URL` | Override API URL | `http://localhost:8001` |
-| `CCRS2_TENANT` | Override default tenant | `demo` |
+| `CCRS_URL` | Override API URL | `http://localhost:8001` |
+| `CCRS_TENANT` | Override default tenant | `demo` |
+| `REDIS_HOST` | Redis host (for worker) | `localhost` |
+| `REDIS_PORT` | Redis port (for worker) | `6380` |
 
-## 📊 Job Workflow
+## 📊 Service Workflow
 
+### Standard Startup
 ```bash
-# 1. Submit job
-./ccrs2 chat "Analyze this code" --tenant dev
-# Output: Job submitted: ccrs2-abc123
+# 1. Start infrastructure
+./ccrs start
+# Output: 🚀 Starting CCRS services (hybrid mode)...
+#         ✅ Containers started
 
-# 2. Check status
-./ccrs2 status ccrs2-abc123
-# Output: Status: completed, Result: ...
+# 2. Start worker daemon
+./ccrs worker start --daemon
+# Output: 🚀 Starting CCRS worker (daemon mode)...
+#         ✅ Worker started (PID: 12345)
 
-# OR: Submit and wait
-./ccrs2 chat "Quick question" --wait
-# Output: Direct response
+# 3. Verify everything
+./ccrs status-all
+# Output: ✅ Containers: Running
+#         ✅ Worker Process: Running (PID: 12345)
+#         ✅ API: Healthy
+```
+
+### Usage Examples
+```bash
+# Quick chat
+./ccrs c "What is 2+2?" --wait
+# Output: ✅ Response from Claude: 2+2 equals 4.
+
+# Background job
+./ccrs chat "Analyze this code"
+# Output: 📋 Job submitted: ccrs-abc12345
+
+# Check job status
+./ccrs s ccrs-abc12345
+# Output: Status: completed, Result: [analysis]
 ```
 
 ## 🔍 Status Codes
@@ -60,69 +93,173 @@
 | Status | Description |
 |--------|-------------|
 | `pending` | Job queued, not started |
-| `running` | Job being processed |
+| `running` | Job being processed by worker |
 | `completed` | Job finished successfully |
 | `failed` | Job failed with error |
+
+## 📋 Monitoring Commands
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `./ccrs logs` | View container logs | `./ccrs logs` |
+| `./ccrs logs worker` | View worker logs | `./ccrs logs worker` |
+| `./ccrs ps` | Show container status | `./ccrs ps` |
+| `./ccrs worker status` | Worker health check | `./ccrs worker status` |
+| `./ccrs status-all` | Complete system status | `./ccrs status-all` |
 
 ## 🎯 Common Patterns
 
 ### Development Workflow
 ```bash
-./ccrs2 up                           # Start services
-./ccrs2 health                       # Verify running
-./ccrs2 c "Test message" --wait      # Quick test
-./ccrs2 logs                         # Monitor if needed
-./ccrs2 down                         # Stop when done
+./ccrs start                    # Start infrastructure
+./ccrs worker start             # Start worker (foreground)
+./ccrs health                   # Verify services
+./ccrs c "Test message" --wait  # Test integration
+./ccrs stop                     # Stop when done
 ```
 
 ### Production Workflow
 ```bash
-./ccrs2 c "Task" --tenant prod --timeout 900 --wait
-./ccrs2 ps                           # Check services
-./ccrs2 health                       # Verify health
+./ccrs start                    # Start infrastructure
+./ccrs worker start --daemon    # Start worker (background)
+./ccrs status-all              # Verify all healthy
+./ccrs c "Production test" --wait  # Test end-to-end
 ```
 
 ### Debugging Workflow
 ```bash
-./ccrs2 ps                           # Check service status
-./ccrs2 logs                         # View logs
-./ccrs2 check                        # Quick diagnostics
-docker-compose restart worker        # Restart if needed
+./ccrs status-all              # Check overall health
+./ccrs worker status           # Check worker + Claude CLI
+./ccrs logs                    # View container logs
+./ccrs logs worker             # View worker logs
+./ccrs restart                 # Restart if needed
 ```
 
-### Batch Processing
+### Multi-Tenant Usage
 ```bash
-# Submit multiple jobs
-./ccrs2 c "Task 1" --tenant batch
-./ccrs2 c "Task 2" --tenant batch
-./ccrs2 c "Task 3" --tenant batch
+# Development tenant
+./ccrs c "Dev message" --tenant dev --wait
 
-# Check results later
-./ccrs2 s ccrs2-job1
-./ccrs2 s ccrs2-job2
-./ccrs2 s ccrs2-job3
+# Production tenant
+./ccrs c "Prod message" --tenant production --wait
+
+# Custom tenant with timeout
+./ccrs c "Long task" --tenant analytics --timeout 900 --wait
 ```
 
-## 🚨 Emergency Commands
+## 🚨 Emergency & Recovery
 
 | Situation | Command |
 |-----------|---------|
-| **Services stuck** | `./ccrs2 down && ./ccrs2 up` |
-| **Worker not responding** | `docker-compose restart worker` |
-| **Clear job queue** | `docker-compose exec redis redis-cli FLUSHALL` |
-| **Reset everything** | `./ccrs2 down && docker system prune -f && ./ccrs2 up` |
+| **Services stuck** | `./ccrs stop && ./ccrs start` |
+| **Worker not responding** | `./ccrs worker restart` |
+| **Worker stuck** | `./ccrs worker stop && ./ccrs worker start -d` |
+| **Port conflicts** | `lsof -i :8001` and `lsof -i :6380` |
+| **Clear everything** | `./ccrs stop && docker system prune -f` |
+| **Force stop worker** | `kill $(cat .worker.pid)` |
+
+## 🛠️ Advanced Usage
+
+### Multiple Workers
+```bash
+# Start primary worker daemon
+./ccrs worker start --daemon
+
+# Start additional workers manually
+python -u worker.py &
+python -u worker.py &
+
+# Check all worker processes
+ps aux | grep worker.py
+```
+
+### Custom Configuration
+```bash
+# Override API URL
+export CCRS_URL="http://custom-host:8001"
+./ccrs health
+
+# Override tenant for session
+export CCRS_TENANT="production"
+./ccrs c "Hello production" --wait
+
+# Worker with custom Redis
+export REDIS_HOST="custom-redis"
+export REDIS_PORT="6380"
+./ccrs worker start
+```
+
+### Log Management
+```bash
+# Container logs
+./ccrs logs | tee ccrs-containers.log
+
+# Worker logs (daemon mode)
+tail -f worker.log
+
+# Real-time API logs
+docker logs -f ccrs-api | tee api.log
+
+# All logs combined
+./ccrs logs & tail -f worker.log
+```
+
+### Health Monitoring
+```bash
+# Detailed worker status
+./ccrs worker status
+# Shows: Claude CLI path, worker PID, Redis connection
+
+# API health endpoint
+curl http://localhost:8001/health
+
+# Container health
+./ccrs ps
+
+# Complete system check
+./ccrs status-all && ./ccrs health
+```
 
 ## 📞 Help & Support
 
 | Need | Command |
 |------|---------|
-| **CLI help** | `./ccrs2 --help` |
-| **Command help** | `./ccrs2 chat --help` |
-| **Service status** | `./ccrs2 ps` |
-| **Health check** | `./ccrs2 health` |
-| **View logs** | `./ccrs2 logs` |
+| **CLI help** | `./ccrs --help` |
+| **Command help** | `./ccrs chat --help` |
+| **Worker status** | `./ccrs worker status` |
+| **Service status** | `./ccrs status-all` |
+| **Health check** | `./ccrs health` |
+| **View logs** | `./ccrs logs` |
 | **API docs** | Open `http://localhost:8001/docs` |
+
+## 🔗 Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | General error |
+| `2` | Command not found |
+| `130` | Interrupted (Ctrl+C) |
+
+## 📱 Shortcuts Reference
+
+| Shortcut | Full Command | Purpose |
+|----------|--------------|---------|
+| `./ccrs c "msg"` | `./ccrs chat "msg"` | Quick chat |
+| `./ccrs s job-id` | `./ccrs status job-id` | Check status |
+| `./ccrs h` | `./ccrs health` | Health check |
+| `./ccrs -v` | `./ccrs version` | Show version |
+| `./ccrs -h` | `./ccrs --help` | Show help |
 
 ---
 
-**💡 Tip:** Bookmark this page for quick reference while using CCRS-2!
+## 💡 Pro Tips
+
+1. **Use shortcuts** - `./ccrs c` instead of `./ccrs chat`
+2. **Always use --wait** - Get immediate responses with `--wait`
+3. **Monitor with status-all** - `./ccrs status-all` shows everything
+4. **Use daemon mode in production** - `./ccrs worker start -d`
+5. **Check worker status first** - Most issues are worker-related
+6. **Bookmark logs command** - `./ccrs logs worker` for debugging
+
+**💡 Tip:** Bookmark this page for quick reference while using CCRS!

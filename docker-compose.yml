@@ -2,7 +2,7 @@ services:
   # Redis - Job Queue
   redis:
     image: redis:7-alpine
-    container_name: ccrs2-redis
+    container_name: ccrs-redis
     ports:
       - "6380:6379"
     command: redis-server --appendonly yes
@@ -10,10 +10,10 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  # CCRS-2 API Server
+  # CCRS API Server
   api:
     build: .
-    container_name: ccrs2-api
+    container_name: ccrs-api
     ports:
       - "8001:8000"
     depends_on:
@@ -26,10 +26,10 @@ services:
       - .:/app
     restart: unless-stopped
 
-  # CCRS-2 Worker
+  # CCRS Worker (Legacy - use hybrid mode instead)
   worker:
     build: .
-    container_name: ccrs2-worker
+    container_name: ccrs-worker
     depends_on:
       - redis
     environment:

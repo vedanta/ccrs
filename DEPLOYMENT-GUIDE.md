@@ -1,10 +1,10 @@
-# 🚀 CCRS-2 Deployment Guide
+# 🚀 CCRS Deployment Guide
 
 **Integrating Claude Code CLI with Containerized Services**
 
 ## The Challenge
 
-CCRS-2 runs API and Redis in Docker containers, but needs to execute Claude Code CLI commands. Since Claude CLI is installed on the host system, we need to bridge the container-host gap.
+CCRS runs API and Redis in Docker containers, but needs to execute Claude Code CLI commands. Since Claude CLI is installed on the host system, we need to bridge the container-host gap.
 
 ## 🎯 Deployment Options
 
@@ -16,8 +16,8 @@ Host System:
 ├── claude CLI ✅
 ├── Worker Process (Python) → Accesses claude directly
 └── Docker Containers:
-    ├── ccrs2-api (FastAPI)
-    └── ccrs2-redis (Queue)
+    ├── ccrs-api (FastAPI)
+    └── ccrs-redis (Queue)
 ```
 
 **Advantages:**
@@ -46,14 +46,14 @@ chmod +x run-worker-host.sh
 # Method 2: Manual setup
 export REDIS_HOST=localhost
 export REDIS_PORT=6380
-python worker-production.py
+python -u worker-production.py
 ```
 
 3. **Test the setup:**
 ```bash
 # API and Redis in containers, worker on host
-./ccrs2 health
-./ccrs2 chat "Hello Claude!" --wait
+./ccrs health
+./ccrs chat "Hello Claude!" --wait
 ```
 
 ### Option 2: Full Container with Volume Mount
@@ -61,9 +61,9 @@ python worker-production.py
 **Architecture:**
 ```
 Docker Containers:
-├── ccrs2-api (FastAPI)
-├── ccrs2-redis (Queue)
-└── ccrs2-worker (with host volume mounts) → Accesses host claude
+├── ccrs-api (FastAPI)
+├── ccrs-redis (Queue)
+└── ccrs-worker (with host volume mounts) → Accesses host claude
 ```
 
 **Setup:** *(More complex, use Option 1 instead)*
@@ -106,15 +106,15 @@ docker-compose -f docker-compose.hybrid.yml ps
 cp worker-production.py worker.py
 
 # Or run production worker directly
-python worker-production.py
+python -u worker-production.py
 ```
 
 ### 3. Test Real Claude Integration
 
 ```bash
 # Test with actual Claude CLI
-./ccrs2 chat "What is the current time?" --wait
-./ccrs2 command "/help" --wait
+./ccrs chat "What is the current time?" --wait
+./ccrs command "/help" --wait
 ```
 
 ---
@@ -147,10 +147,10 @@ claude --help
 docker-compose -f docker-compose.hybrid.yml up -d
 
 # 2. Run production worker
-python worker-production.py &
+python -u worker-production.py &
 
 # 3. Test full pipeline
-./ccrs2 chat "Hello from real Claude!" --wait
+./ccrs chat "Hello from real Claude!" --wait
 
 # Expected: Real response from Claude CLI
 ```
@@ -184,7 +184,7 @@ Error: Worker Redis connection failed
 ```bash
 # Check Redis container
 docker-compose -f docker-compose.hybrid.yml ps
-docker logs ccrs2-redis
+docker logs ccrs-redis
 
 # Test connection
 redis-cli -h localhost -p 6380 ping
@@ -228,19 +228,19 @@ lsof -i :6380  # Redis port
 
 ### Systemd Service (Linux)
 
-Create `/etc/systemd/system/ccrs2-worker.service`:
+Create `/etc/systemd/system/ccrs-worker.service`:
 ```ini
 [Unit]
-Description=CCRS-2 Worker
+Description=CCRS Worker
 After=docker.service
 
 [Service]
 Type=simple
-User=ccrs2
-WorkingDirectory=/opt/ccrs2
+User=ccrs
+WorkingDirectory=/opt/ccrs
 Environment=REDIS_HOST=localhost
 Environment=REDIS_PORT=6380
-ExecStart=/usr/bin/python3 worker-production.py
+ExecStart=/usr/bin/python3 -u worker-production.py
 Restart=always
 
 [Install]
@@ -249,9 +249,9 @@ WantedBy=multi-user.target
 
 ```bash
 # Enable and start
-sudo systemctl enable ccrs2-worker
-sudo systemctl start ccrs2-worker
-sudo systemctl status ccrs2-worker
+sudo systemctl enable ccrs-worker
+sudo systemctl start ccrs-worker
+sudo systemctl status ccrs-worker
 ```
 
 ### Docker Swarm / Kubernetes
@@ -282,8 +282,8 @@ For production scaling, consider:
 1. **Test hybrid deployment:**
 ```bash
 docker-compose -f docker-compose.hybrid.yml up -d
-python worker-production.py
-./ccrs2 chat "Test real integration" --wait
+python -u worker-production.py
+./ccrs chat "Test real integration" --wait
 ```
 
 2. **Update bash wrapper** to support hybrid mode

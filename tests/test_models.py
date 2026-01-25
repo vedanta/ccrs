@@ -1,5 +1,5 @@
 """
-Test CCRS-2 Pydantic Models
+Test CCRS Pydantic Models
 """
 import pytest
 from pydantic import ValidationError
@@ -55,14 +55,14 @@ class TestJobResponse:
     def test_valid_job_response(self):
         """Test valid job response creation."""
         response = JobResponse(
-            job_id="ccrs2-test123",
+            job_id="ccrs-test123",
             tenant_id="test",
             status="accepted",
             message="Job submitted successfully",
             created_at="2026-01-25T13:30:00Z"
         )
 
-        assert response.job_id == "ccrs2-test123"
+        assert response.job_id == "ccrs-test123"
         assert response.tenant_id == "test"
         assert response.status == "accepted"
         assert response.message == "Job submitted successfully"
@@ -75,7 +75,7 @@ class TestJobStatus:
     def test_pending_job_status(self):
         """Test pending job status."""
         status = JobStatus(
-            job_id="ccrs2-test123",
+            job_id="ccrs-test123",
             tenant_id="test",
             operation="chat",
             status="pending",
@@ -94,7 +94,7 @@ class TestJobStatus:
     def test_completed_job_status(self):
         """Test completed job status."""
         status = JobStatus(
-            job_id="ccrs2-test123",
+            job_id="ccrs-test123",
             tenant_id="test",
             operation="chat",
             status="completed",
@@ -116,7 +116,7 @@ class TestJobStatus:
     def test_failed_job_status(self):
         """Test failed job status."""
         status = JobStatus(
-            job_id="ccrs2-test123",
+            job_id="ccrs-test123",
             tenant_id="test",
             operation="chat",
             status="failed",

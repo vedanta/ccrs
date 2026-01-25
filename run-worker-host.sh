@@ -1,5 +1,5 @@
 #!/bin/bash
-# CCRS-2 Worker - Host Mode
+# CCRS Worker - Host Mode
 # Run worker on host system with access to Claude CLI
 
 set -e
@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BLUE}🚀 Starting CCRS-2 Worker on Host System${NC}"
+echo -e "${BLUE}🚀 Starting CCRS Worker on Host System${NC}"
 echo -e "${BLUE}   (with access to Claude CLI)${NC}"
 echo ""
 

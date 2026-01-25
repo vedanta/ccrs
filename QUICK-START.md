@@ -1,31 +1,34 @@
-# ⚡ CCRS-2 Quick Start
+# ⚡ CCRS Quick Start
 
-**Get up and running with CCRS-2 in 60 seconds!**
+**Get up and running with CCRS in 60 seconds!**
 
-## 📥 1. Setup (30 seconds)
+## 📥 1. Setup (20 seconds)
 
 ```bash
 # Clone and prepare
 git clone <repo-url>
-cd ccrs2
-chmod +x ccrs2
+cd ccrs
+chmod +x ccrs
 ```
 
 ## 🚀 2. Start Services (20 seconds)
 
 ```bash
-# Start everything
-./ccrs2 up
+# Start infrastructure (API + Redis containers)
+./ccrs start
 
-# Check health
-./ccrs2 health
+# Start worker daemon (Claude integration)
+./ccrs worker start --daemon
+
+# Check everything is running
+./ccrs status-all
 ```
 
-## 💬 3. First Chat (10 seconds)
+## 💬 3. First Chat (20 seconds)
 
 ```bash
 # Chat with Claude
-./ccrs2 chat "Hello Claude!" --wait
+./ccrs chat "Hello Claude!" --wait
 ```
 
 ---
@@ -34,42 +37,57 @@ chmod +x ccrs2
 
 | Action | Command |
 |--------|---------|
-| **Start Services** | `./ccrs2 up` |
-| **Stop Services** | `./ccrs2 down` |
-| **Check Health** | `./ccrs2 health` |
-| **Service Status** | `./ccrs2 ps` |
-| **View Logs** | `./ccrs2 logs` |
-| **Chat** | `./ccrs2 chat "message" --wait` |
-| **Execute Command** | `./ccrs2 command "/help" --wait` |
-| **Check Job Status** | `./ccrs2 status ccrs2-abc123` |
-| **Help** | `./ccrs2 --help` |
+| **Start Services** | `./ccrs start` |
+| **Stop Services** | `./ccrs stop` |
+| **Start Worker** | `./ccrs worker start --daemon` |
+| **Stop Worker** | `./ccrs worker stop` |
+| **Check All Status** | `./ccrs status-all` |
+| **Check Worker** | `./ccrs worker status` |
+| **Chat** | `./ccrs chat "message" --wait` |
+| **Execute Command** | `./ccrs command "/help" --wait` |
+| **Check Job Status** | `./ccrs status ccrs-abc123` |
+| **Health Check** | `./ccrs health` |
+| **View Logs** | `./ccrs logs` |
+| **Help** | `./ccrs --help` |
 
 ---
 
-## 🎯 Common Scenarios
+## 🎯 Common Usage Patterns
 
 ### Quick Chat
 ```bash
-./ccrs2 c "Explain Python asyncio" --wait
-```
-
-### Different Tenant
-```bash
-./ccrs2 chat "Hello" --tenant production --wait
-```
-
-### Custom Timeout
-```bash
-./ccrs2 chat "Complex task" --timeout 600 --wait
+./ccrs c "Explain Python asyncio" --wait
 ```
 
 ### Background Job
 ```bash
 # Submit without waiting
-./ccrs2 chat "Analyze this data"
+./ccrs chat "Analyze this data"
 
 # Check later
-./ccrs2 status ccrs2-abc123
+./ccrs status ccrs-abc123
+```
+
+### Different Tenant
+```bash
+./ccrs chat "Hello" --tenant production --wait
+```
+
+### Custom Timeout
+```bash
+./ccrs chat "Complex task" --timeout 600 --wait
+```
+
+### Service Management
+```bash
+# Development workflow
+./ccrs start                    # Start infrastructure
+./ccrs worker start             # Start worker (foreground)
+
+# Production workflow
+./ccrs start                    # Start infrastructure
+./ccrs worker start --daemon    # Start worker (background)
+./ccrs status-all              # Verify everything running
 ```
 
 ---
@@ -78,17 +96,83 @@ chmod +x ccrs2
 
 | Problem | Solution |
 |---------|----------|
-| **Port conflicts** | `lsof -i :8001` then kill conflicting process |
-| **Services won't start** | `./ccrs2 down && ./ccrs2 up` |
-| **Health check fails** | `./ccrs2 logs` to see errors |
-| **Jobs stuck** | `docker-compose restart worker` |
+| **Port conflicts** | `lsof -i :8001` then kill process or change ports |
+| **Services won't start** | `./ccrs stop && ./ccrs start` |
+| **Worker issues** | `./ccrs worker status` to diagnose |
+| **Health check fails** | `./ccrs logs` to see errors |
+| **Claude CLI not found** | Install from [claude.ai/claude-code](https://claude.ai/claude-code) |
+
+---
+
+## ⚙️ Prerequisites
+
+- **Docker & Docker Compose** (for infrastructure)
+- **Python 3.11+** (for CLI and worker)
+- **Claude Code CLI** (for real Claude integration)
+
+**Install Claude CLI:**
+```bash
+# Visit: https://claude.ai/claude-code
+# Follow installation instructions
+
+# Verify installation
+which claude
+claude --version
+```
+
+---
+
+## 🌍 Environment Variables
+
+```bash
+# Override defaults (optional)
+export CCRS_URL="http://localhost:8001"     # API endpoint
+export CCRS_TENANT="demo"                   # Default tenant
+export REDIS_HOST="localhost"               # Redis host (worker)
+export REDIS_PORT="6380"                    # Redis port (worker)
+```
+
+---
+
+## 🎯 What's Happening?
+
+### Architecture
+```
+Host System:
+├── Claude CLI ✅                 (Direct access)
+├── Worker Process (Python) ────┐
+└── Docker Containers:           │
+    ├── API Server (FastAPI) ────┤
+    └── Redis Queue ─────────────┘
+```
+
+### Job Flow
+1. **Submit** - `./ccrs chat "message"` → API
+2. **Queue** - API stores job in Redis
+3. **Process** - Worker executes Claude CLI
+4. **Complete** - Worker stores result
+5. **Retrieve** - CLI gets response
+
+### Ports & Services
+- **API:** http://localhost:8001
+- **Redis:** localhost:6380 (container)
+- **Worker:** Runs on host system
 
 ---
 
 ## 📖 Need More Help?
 
-- **Full Guide:** See `USER-GUIDE.md`
-- **Technical Docs:** See `README.md`
-- **CLI Help:** Run `./ccrs2 --help`
+- **Complete Guide:** See [USER-GUIDE.md](USER-GUIDE.md)
+- **Command Reference:** See [COMMAND-REFERENCE.md](COMMAND-REFERENCE.md)
+- **Architecture Details:** See [ARCHITECTURE.md](ARCHITECTURE.md)
+- **CLI Help:** Run `./ccrs --help`
 
-**🎉 You're ready to go!**
+---
+
+**🎉 You're ready to go! CCRS is simple, effective, and working!** 🚀
+
+**Pro Tips:**
+- Use `./ccrs c "message"` for quick chats
+- Run `./ccrs status-all` to check everything
+- Use `--daemon` for production worker mode
+- Check `./ccrs worker status` if Claude CLI issues

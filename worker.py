@@ -1,5 +1,5 @@
 """
-CCRS-2 Production Worker
+CCRS Production Worker
 Processes jobs from Redis queue with real Claude CLI integration
 """
 import json
@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 
-class CCRS2Worker:
+class CCRSWorker:
     def __init__(self):
         """Initialize worker with Redis connection and Claude CLI verification"""
         # Check Claude CLI availability
@@ -29,7 +29,7 @@ class CCRS2Worker:
         try:
             self.redis_client = redis.Redis(
                 host=os.getenv('REDIS_HOST', 'localhost'),
-                port=int(os.getenv('REDIS_PORT', 6379)),
+                port=int(os.getenv('REDIS_PORT', 6380)),
                 db=0,
                 decode_responses=True
             )
@@ -178,7 +178,7 @@ class CCRS2Worker:
 
     def run(self):
         """Main worker loop"""
-        print("🚀 CCRS-2 Worker starting...")
+        print("🚀 CCRS Worker starting...")
         if self.mock_mode:
             print("🎭 Running in MOCK mode (Claude CLI not found)")
         else:
@@ -188,7 +188,7 @@ class CCRS2Worker:
         while True:
             try:
                 # Blocking pop from job queue (timeout 1 second)
-                result = self.redis_client.brpop("ccrs2:job_queue", timeout=1)
+                result = self.redis_client.brpop("ccrs:job_queue", timeout=1)
 
                 if result:
                     queue_name, job_id = result
@@ -204,5 +204,5 @@ class CCRS2Worker:
 
 
 if __name__ == "__main__":
-    worker = CCRS2Worker()
+    worker = CCRSWorker()
     worker.run()

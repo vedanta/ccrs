@@ -1,32 +1,32 @@
 """
-Test CCRS-2 CLI Functionality
+Test CCRS CLI Functionality
 """
 import pytest
 import json
 from unittest.mock import patch, Mock
 from click.testing import CliRunner
-from cli import cli, CCRS2Client, client
+from cli import cli, CCRSClient, client
 
-class TestCCRS2Client:
-    """Test CCRS2Client class."""
+class TestCCRSClient:
+    """Test CCRSClient class."""
 
     @pytest.mark.cli
     def test_client_initialization_default(self):
         """Test client initialization with defaults."""
-        client = CCRS2Client()
+        client = CCRSClient()
         assert client.base_url == "http://localhost:8001"
 
     @pytest.mark.cli
     def test_client_initialization_custom(self):
         """Test client initialization with custom URL."""
-        client = CCRS2Client("http://custom:9000")
+        client = CCRSClient("http://custom:9000")
         assert client.base_url == "http://custom:9000"
 
     @pytest.mark.cli
-    @patch.dict('os.environ', {'CCRS2_URL': 'http://env-url:8080'})
+    @patch.dict('os.environ', {'CCRS_URL': 'http://env-url:8080'})
     def test_client_initialization_env_var(self):
         """Test client initialization with environment variable."""
-        client = CCRS2Client()
+        client = CCRSClient()
         assert client.base_url == "http://env-url:8080"
 
 class TestJobSubmission:
@@ -40,7 +40,7 @@ class TestJobSubmission:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "job_id": "ccrs2-test123",
+            "job_id": "ccrs-test123",
             "status": "accepted",
             "message": "Job submitted successfully"
         }
@@ -49,7 +49,7 @@ class TestJobSubmission:
         result = cli_client.submit_job("demo", "chat", "Test message", 300)
 
         assert result is not None
-        assert result["job_id"] == "ccrs2-test123"
+        assert result["job_id"] == "ccrs-test123"
         assert result["status"] == "accepted"
 
         # Verify request
@@ -95,10 +95,10 @@ class TestJobStatus:
         mock_response.json.return_value = sample_completed_job
         mock_get.return_value = mock_response
 
-        result = cli_client.get_job_status("ccrs2-test123")
+        result = cli_client.get_job_status("ccrs-test123")
 
         assert result is not None
-        assert result["job_id"] == "ccrs2-test123"
+        assert result["job_id"] == "ccrs-test123"
         assert result["status"] == "completed"
 
     @pytest.mark.cli
@@ -109,7 +109,7 @@ class TestJobStatus:
         mock_response.status_code = 404
         mock_get.return_value = mock_response
 
-        result = cli_client.get_job_status("ccrs2-nonexistent")
+        result = cli_client.get_job_status("ccrs-nonexistent")
 
         assert result is None
 
@@ -154,13 +154,13 @@ class TestChatCommand:
     @patch.object(client, 'submit_job')
     def test_chat_command_without_wait(self, mock_submit):
         """Test chat command without waiting."""
-        mock_submit.return_value = {"job_id": "ccrs2-test123", "status": "accepted"}
+        mock_submit.return_value = {"job_id": "ccrs-test123", "status": "accepted"}
 
         runner = CliRunner()
         result = runner.invoke(cli, ['chat', 'Hello Claude'])
 
         assert result.exit_code == 0
-        assert "Job submitted: ccrs2-test123" in result.output
+        assert "Job submitted: ccrs-test123" in result.output
         mock_submit.assert_called_once_with(
             tenant_id="demo",
             operation="chat",
@@ -173,9 +173,9 @@ class TestChatCommand:
     @patch.object(client, 'submit_job')
     def test_chat_command_with_wait_success(self, mock_submit, mock_status):
         """Test chat command with waiting for completion."""
-        mock_submit.return_value = {"job_id": "ccrs2-test123", "status": "accepted"}
+        mock_submit.return_value = {"job_id": "ccrs-test123", "status": "accepted"}
         mock_status.return_value = {
-            "job_id": "ccrs2-test123",
+            "job_id": "ccrs-test123",
             "status": "completed",
             "result": "Mock Claude response"
         }
@@ -192,9 +192,9 @@ class TestChatCommand:
     @patch.object(client, 'submit_job')
     def test_chat_command_with_wait_failed(self, mock_submit, mock_status):
         """Test chat command with job failure."""
-        mock_submit.return_value = {"job_id": "ccrs2-test123", "status": "accepted"}
+        mock_submit.return_value = {"job_id": "ccrs-test123", "status": "accepted"}
         mock_status.return_value = {
-            "job_id": "ccrs2-test123",
+            "job_id": "ccrs-test123",
             "status": "failed",
             "error": "Command execution failed"
         }
@@ -225,13 +225,13 @@ class TestCommandCommand:
     @patch.object(client, 'submit_job')
     def test_command_execution(self, mock_submit):
         """Test command execution."""
-        mock_submit.return_value = {"job_id": "ccrs2-test123", "status": "accepted"}
+        mock_submit.return_value = {"job_id": "ccrs-test123", "status": "accepted"}
 
         runner = CliRunner()
         result = runner.invoke(cli, ['command', '/help'])
 
         assert result.exit_code == 0
-        assert "Job submitted: ccrs2-test123" in result.output
+        assert "Job submitted: ccrs-test123" in result.output
         mock_submit.assert_called_once_with(
             tenant_id="demo",
             operation="command",
@@ -249,11 +249,11 @@ class TestStatusCommand:
         mock_status.return_value = sample_completed_job
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['status', 'ccrs2-test123'])
+        result = runner.invoke(cli, ['status', 'ccrs-test123'])
 
         assert result.exit_code == 0
         assert "Job Details:" in result.output
-        assert "ID: ccrs2-test123" in result.output
+        assert "ID: ccrs-test123" in result.output
         assert "Status: completed" in result.output
         assert "Result:" in result.output
 
@@ -264,7 +264,7 @@ class TestStatusCommand:
         mock_status.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['status', 'ccrs2-nonexistent'])
+        result = runner.invoke(cli, ['status', 'ccrs-nonexistent'])
 
         assert result.exit_code == 0
         # Should handle gracefully
@@ -286,7 +286,7 @@ class TestHealthCommand:
         result = runner.invoke(cli, ['health'])
 
         assert result.exit_code == 0
-        assert "CCRS-2 is healthy and ready!" in result.output
+        assert "CCRS is healthy and ready!" in result.output
 
     @pytest.mark.cli
     @patch.object(client, 'health_check')
@@ -310,4 +310,4 @@ class TestVersionCommand:
         result = runner.invoke(cli, ['version'])
 
         assert result.exit_code == 0
-        assert "CCRS-2 CLI v2.0.0" in result.output
+        assert "CCRS CLI v3.0.0" in result.output

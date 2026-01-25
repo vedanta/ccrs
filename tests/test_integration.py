@@ -1,5 +1,5 @@
 """
-Test CCRS-2 Integration
+Test CCRS Integration
 End-to-end functionality testing
 """
 import pytest
@@ -36,7 +36,7 @@ class TestEndToEndWorkflow:
 
         job_response = response.json()
         job_id = job_response["job_id"]
-        assert job_id.startswith("ccrs2-")
+        assert job_id.startswith("ccrs-")
 
         # Mock job data for retrieval
         completed_job = {
@@ -119,7 +119,7 @@ class TestOperationTypes:
 
         data = response.json()
         assert data["status"] == "accepted"
-        assert data["job_id"].startswith("ccrs2-")
+        assert data["job_id"].startswith("ccrs-")
 
 class TestErrorHandling:
     """Test error handling scenarios."""

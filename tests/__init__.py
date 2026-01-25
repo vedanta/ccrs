@@ -1,1 +1,1 @@
-# CCRS-2 Test Suite
+# CCRS Test Suite

@@ -1,5 +1,5 @@
 """
-CCRS-2 Simple Models
+CCRS Simple Models
 Using Pydantic v1 for proven stability
 """
 from pydantic import BaseModel

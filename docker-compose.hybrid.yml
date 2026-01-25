@@ -1,11 +1,11 @@
-# CCRS-2 Hybrid Deployment
+# CCRS Hybrid Deployment (Recommended)
 # API + Redis in containers, Worker runs on host with Claude access
 
 services:
   # Redis - Job Queue (Container)
   redis:
     image: redis:7-alpine
-    container_name: ccrs2-redis
+    container_name: ccrs-redis
     ports:
       - "6380:6379"
     command: redis-server --appendonly yes
@@ -13,10 +13,10 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  # CCRS-2 API Server (Container)
+  # CCRS API Server (Container)
   api:
     build: .
-    container_name: ccrs2-api
+    container_name: ccrs-api
     ports:
       - "8001:8000"
     depends_on:
