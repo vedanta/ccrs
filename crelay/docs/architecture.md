@@ -181,7 +181,8 @@ crelay/
 ├── deploy/
 │   ├── docker-compose.yml
 │   └── Dockerfile
-└── ARCHITECTURE-GO.md
+└── docs/
+    └── architecture.md
 ```
 
 **Key shift from Python:** `internal/job` is the single source of truth for the
