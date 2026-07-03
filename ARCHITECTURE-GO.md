@@ -9,6 +9,8 @@
 
 ## Naming
 
+**crelay** — pronounced *cre-lay* (a blend of **Cl**aude + **relay**, spoken as one word).
+
 - **crelay** — the client binary (frontend / interaction). `crelay chat "..."`
 - **crelayd** — the server daemon (backend). `crelayd serve`, `crelayd worker`
 
