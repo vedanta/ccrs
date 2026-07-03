@@ -1,17 +1,28 @@
-# CCRS — Go Rewrite Architecture (Proposed)
+# crelay — Architecture (Proposed)
 
-> Clean-room rewrite of CCRS in **Go**, keeping the original idea and hybrid
-> architecture. The flimsy hand-rolled `LPUSH`/`BRPOP` queue is replaced with a
-> real job queue (**Asynq**), and the Python client + Bash wrapper + two workers
-> collapse into **two Go binaries**.
+> **crelay** (*Claude + relay*) is a clean-room Go rewrite of CCRS, keeping the
+> original idea and hybrid architecture. It relays a request to the Claude Code
+> CLI and returns the result. The flimsy hand-rolled `LPUSH`/`BRPOP` queue is
+> replaced with a real job queue (**Asynq**), and the Python client + Bash
+> wrapper + two workers collapse into **two Go binaries**: `crelay` (client) and
+> `crelayd` (server).
+
+## Naming
+
+- **crelay** — the client binary (frontend / interaction). `crelay chat "..."`
+- **crelayd** — the server daemon (backend). `crelayd serve`, `crelayd worker`
+
+(Formerly *CCRS — Claude Code Routing Service*. Renamed during the rewrite:
+"routing" was inaccurate — the service **queues and relays** work to Claude, it
+doesn't route between destinations.)
 
 ## Target Stack
 
-| Concern | Python (today) | Go (proposed) |
+| Concern | Python (CCRS, today) | Go (crelay, proposed) |
 |---|---|---|
-| Client / CLI | Bash wrapper + `ccrs.bat` + `cli.py` (Click) | **`ccrs`** binary — [Cobra](https://github.com/spf13/cobra) |
-| API server | `app.py` (FastAPI) | **`ccrsd serve`** — `net/http` + [chi](https://github.com/go-chi/chi) |
-| Worker | `worker.py` + `worker-production.py` | **`ccrsd worker`** — [Asynq](https://github.com/hibiken/asynq) handler |
+| Client / CLI | Bash wrapper + `ccrs.bat` + `cli.py` (Click) | **`crelay`** binary — [Cobra](https://github.com/spf13/cobra) |
+| API server | `app.py` (FastAPI) | **`crelayd serve`** — `net/http` + [chi](https://github.com/go-chi/chi) |
+| Worker | `worker.py` + `worker-production.py` | **`crelayd worker`** — [Asynq](https://github.com/hibiken/asynq) handler |
 | Queue | Redis `LPUSH`/`BRPOP` (at-most-once) | **Asynq over Redis** (at-least-once, retries, DLQ, reclaim) |
 | Job store | JSON blobs in Redis | Asynq task state + result store in Redis |
 | Claude exec | `subprocess.run` | `os/exec` `CommandContext` |
@@ -24,24 +35,24 @@
 
 ```mermaid
 flowchart TB
-    subgraph client["🖥️ FRONTEND — ccrs (client binary)"]
+    subgraph client["🖥️ FRONTEND — crelay (client binary)"]
         direction TB
         CLI["Cobra CLI<br/>chat · command · status · health"]
         HTTPC["HTTP client"]
         CLI --> HTTPC
     end
 
-    subgraph backend["⚙️ BACKEND — ccrsd (server binary)"]
+    subgraph backend["⚙️ BACKEND — crelayd (server binary)"]
         direction TB
 
-        subgraph api["ccrsd serve  (API)"]
+        subgraph api["crelayd serve  (API)"]
             ROUTER["chi router<br/>/execute · /jobs/:id · /health"]
             AUTH["API-key auth<br/>middleware"]
             ENQ["Asynq client<br/>(enqueue task)"]
             ROUTER --> AUTH --> ENQ
         end
 
-        subgraph wrk["ccrsd worker  (executor)"]
+        subgraph wrk["crelayd worker  (executor)"]
             SRV["Asynq server<br/>worker pool (N goroutines)"]
             HANDLER["job handler<br/>retries · timeout · backoff"]
             EXEC["claude executor<br/>os/exec CommandContext"]
@@ -82,17 +93,17 @@ stay **containerized**. The client runs anywhere.
 ```mermaid
 flowchart LR
     subgraph laptop["Any machine"]
-        C["ccrs (client)"]
+        C["crelay (client)"]
     end
 
     subgraph host["Host machine"]
         direction TB
-        W["ccrsd worker<br/>(host process)"]
+        W["crelayd worker<br/>(host process)"]
         CC["claude CLI<br/>(authenticated)"]
         W -->|os/exec| CC
 
         subgraph docker["Docker Compose"]
-            A["ccrsd serve<br/>(container :8001)"]
+            A["crelayd serve<br/>(container :8001)"]
             R[("Redis :6380")]
             M["asynqmon :8080"]
         end
@@ -112,13 +123,13 @@ flowchart LR
 sequenceDiagram
     autonumber
     participant U as User
-    participant C as ccrs (client)
-    participant A as ccrsd serve
+    participant C as crelay (client)
+    participant A as crelayd serve
     participant Q as Redis / Asynq
-    participant W as ccrsd worker
+    participant W as crelayd worker
     participant CL as claude CLI
 
-    U->>C: ccrs chat "..." --wait
+    U->>C: crelay chat "..." --wait
     C->>A: POST /execute  (API key)
     A->>A: auth + validate tenant
     A->>Q: Enqueue(task) → task_id
@@ -151,12 +162,12 @@ sequenceDiagram
 ## Proposed Module Layout
 
 ```
-ccrs/
-├── go.mod
+crelay/
+├── go.mod                  # module github.com/vedanta/crelay
 ├── cmd/
-│   ├── ccrs/          # client binary (frontend)
+│   ├── crelay/        # client binary (frontend)
 │   │   └── main.go    # Cobra root: chat/command/status/health
-│   └── ccrsd/         # server binary (backend)
+│   └── crelayd/       # server binary (backend)
 │       └── main.go    # Cobra root: serve / worker
 ├── internal/
 │   ├── api/           # chi handlers, request/response models, auth middleware
@@ -172,7 +183,7 @@ ccrs/
 ```
 
 **Key shift from Python:** `internal/job` is the single source of truth for the
-wire contract, imported by both `ccrs` (client) and `ccrsd` (server) — no more
+wire contract, imported by both `crelay` (client) and `crelayd` (server) — no more
 drift between `models.py` and the CLI's hand-built dicts.
 
 ## What Carries Over vs. Changes
@@ -189,9 +200,12 @@ drift between `models.py` and the CLI's hand-built dicts.
 - API-key auth + tightened CORS
 - Structured logging (`slog`) + queue dashboard (asynqmon)
 - Single typed wire contract shared by client and server
-```
 
 ---
 
 **Status:** proposal for review. Nothing implemented yet — this documents the
 target before writing Go.
+
+> **Note:** the git repo itself is still named `ccrs`. Renaming the GitHub repo
+> to `crelay` (and the local dir + module path) is a separate step to do when we
+> start the actual rewrite.
